@@ -1,0 +1,53 @@
+#set -x
+rm -rf /tmp/puppet/*
+ntd="/tmp/puppet/$(openssl rand -base64 1)"
+nti="/tmp/puppet/$(openssl rand -base64 1)"
+old_list="/tmp/puppet/$(openssl rand -base64 1)"
+new_list="/tmp/puppet/$(openssl rand -base64 1)"
+rpass="hungcao"
+
+#### Step 1: Get the file from remote host and insert to mydb.newusers
+wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/user.list.txt
+#wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/10k-user.txt
+
+mysql -umysql -phungcao -e "delete from mydb.newusers"
+while read line
+do
+	mysql -umysql -p$rpass -e "insert into mydb.newusers (username) values (\"$line\")"
+done < $new_list
+
+#### Step 2: Query the table to get nti / ntd
+mysql -umysql -phungcao -e "select username from mydb.users where (username) not in (select username from mydb.newusers)" | sed 1d > $ntd
+mysql -umysql -phungcao -e "select username from mydb.newusers where (username) not in (select username from mydb.users)" | sed 1d > $nti
+
+
+
+#### ensure that ntd or nti not null
+if [ ! -z $"(cat $ntd)" ] && [ ! -z $"(cat $nti)" ]; then
+
+#### Step 4: Run while loop to delete user
+while read line_ntd
+do
+        mysql -umysql -p$rpass -e "delete from mydb.users where username=\"$line_ntd\""
+	rm -rf /userhome/$line_ntd
+done < $ntd
+
+
+### Step 5a: Run while loop to insert user
+if [ -z "$(mysql -uroot -p123456 -e "select * from mydb.users")" ]; then
+i=100000
+else
+i=$(echo $(mysql -umysql -p$rpass -e "select id from  mydb.users order by id desc limit 1;") | awk '{print $2}')
+fi
+
+while read line_nti
+do
+        let i=$i+1
+	j=$(echo $i | cut -c1-3)
+	path="/homedir/$j/$line_nti"
+        mysql -umysql -p$rpass -e "insert into mydb.users (id,username,path) values ($i,\"$line_nti\",\"$path\" )"
+	mkdir -p $path
+done < $nti
+fi
+
+
