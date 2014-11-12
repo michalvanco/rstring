@@ -9,7 +9,9 @@ rpass="hungcao"
 #### Step 1: Get the file from remote host
 #wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/user.list.txt
 wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/10k-user.txt
-
+if [ -z "$(cat $new_list)" ]; then
+        echo " ERROR"
+else
 #### Step 2: Query the table to get current user list 
 mysql -umysql -p$rpass -e "select username from mydb.users" | sed 1d > $old_list
 
@@ -46,5 +48,5 @@ do
 	mkdir -p $path
 done < $nti
 fi
-
+fi
 

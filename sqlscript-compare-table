@@ -9,7 +9,9 @@ rpass="hungcao"
 #### Step 1: Get the file from remote host and insert to mydb.newusers
 #wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/user.list.txt
 wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/10k-user.txt
-
+if [ -z "$(cat $new_list)" ]; then
+        echo " ERROR"
+else
 mysql -umysql -phungcao -e "delete from mydb.newusers"
 while read line
 do
@@ -49,5 +51,5 @@ do
 	mkdir -p $path
 done < $nti
 fi
-
+fi
 
