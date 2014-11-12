@@ -7,8 +7,8 @@ new_list="/tmp/puppet/$(openssl rand -base64 1)"
 rpass="hungcao"
 
 #### Step 1: Get the file from remote host
-wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/user.list.txt
-#wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/10k-user.txt
+#wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/user.list.txt
+wget -O $new_list  https://raw.githubusercontent.com/caohiephung/rstring/master/10k-user.txt
 
 #### Step 2: Query the table to get current user list 
 mysql -umysql -p$rpass -e "select username from mydb.users" | sed 1d > $old_list
@@ -41,7 +41,7 @@ while read line_nti
 do
         let i=$i+1
 	j=$(echo $i | cut -c1-3)
-	path="/homedir/$j/$line_nti"
+	path="/userhome/$j/$line_nti"
         mysql -umysql -p$rpass -e "insert into mydb.users (id,username,path) values ($i,\"$line_nti\",\"$path\" )"
 	mkdir -p $path
 done < $nti
